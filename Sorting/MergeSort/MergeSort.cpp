@@ -2,7 +2,7 @@
 
 using namespace std;
 
-void merge(int left[], int l, int right[], int r, int base[], int b){
+void merge(int left[], int l, int right[], int r, int base[]){
   int i = 0;
   int j = 0;
   int k = 0;
@@ -12,11 +12,6 @@ void merge(int left[], int l, int right[], int r, int base[], int b){
   }
   while(i < l) base[k++] = left[i++];
   while(j < r) base[k++] = right[j++];
-
-  cout << " After Merging: \n";
-  for(int i = 0; i < b; ++i)
-    cout << base[i] << " ";
-  cout << " End: \n\n\n";
 }
 
 void mergesort(int a[], int n){
@@ -29,7 +24,7 @@ void mergesort(int a[], int n){
     for(int i = 0; i < n-mid; ++i) right[i] = a[i+mid];
     mergesort(left, mid);
     mergesort(right, n-mid);
-    merge(left, mid, right, n-mid, a, n);
+    merge(left, mid, right, n-mid, a);
   }    
 }
 
