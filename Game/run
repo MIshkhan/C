@@ -1,0 +1,3 @@
+cd ./xozuk 
+g++ main.cpp game.cpp -lncurses
+./a.out 
