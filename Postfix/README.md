@@ -1,0 +1,2 @@
+$ ./compile
+$ ./calculate postfix.txt

@@ -1,0 +1,3 @@
+#!/bin/bash
+cd NumberGroups/
+g++ main.cpp numberGroups.cpp

@@ -1,0 +1,2 @@
+$ ./compile
+$ ./toGroup numbers.txt
