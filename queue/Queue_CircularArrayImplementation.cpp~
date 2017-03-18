@@ -1,0 +1,59 @@
+/* Queue - Circular Array implementation in C++*/
+#include<iostream>
+using namespace std; 
+#define MAX_SIZE 100
+
+class Queue {
+private:
+  int A[MAX_SIZE];
+  int front, rear; 
+public:
+  Queue(){
+    front = -1; 
+    rear = -1;
+  }
+  
+  bool IsEmpty(){
+    return (front == -1 && rear == -1); 
+  }
+
+  bool IsFull(){
+    return (rear+1)%MAX_SIZE == front ? true : false;
+  }
+
+  void Enqueue(int x){
+    if(IsFull()) return;
+    if (IsEmpty()) front = rear = 0; 
+    else rear = (rear+1)%MAX_SIZE;
+    A[rear] = x;
+  }
+
+  void Dequeue(){
+    if(IsEmpty()) return;
+    else if(front == rear ) rear = front = -1;
+    else front = (front+1)%MAX_SIZE;
+  }
+  
+  int Front(){
+    if(front == -1) return -1; 
+    return A[front];
+  }
+};
+
+int main(){
+  Queue Q;
+  cout << "How much elements do you want to enqueue ? (max 100) ";
+  size_t size;
+  cin >> size;
+  cout << "Enqueue elements !\n";
+  for(int i = 0; i < size; ++i){
+    int number;
+    cin >> number;
+    Q.Enqueue(number);
+  }
+
+  for(int i = 0; i < size; ++i){
+    cout << Q.Front() << " ";
+    Q.Dequeue();
+  }
+}
