@@ -4,43 +4,50 @@
 #include <string>
 #include <stack>
 
+#include <vector>
+#include <sstream>
+#include <regex>
+
 using namespace std;
 
-bool is_operator(const char& c) {
-  return c == '+' || c == '-' || c == '*' || c == '/' ;
+//True if input string is one of this + - * /
+bool is_operator(const string& c) {
+  regex op("-|[+]|//|[*]");
+  return regex_match(c, op);
 }
 
-bool is_operand(const char& c) {
-  return (c >= '0' && c <= '9');
+//True if input string can be convert to int or double
+bool is_operand(const string& c) {
+  regex number("-?[0-9]+([.][0-9]+)?"); 
+  return regex_match(c, number);
 }
 
-int calculate(const string& input) {
-  stack<char> stack;	
-  char operand1;
-  char operand2;
+stack<string> stacks;	
+double operand1;
+double operand2;
 
-  for(int i(0); i < input.size(); ++i) {
-    if(is_operand(input[i])) { 
-      assert(input[i] >= '0' && input[i] <= '9');
-      stack.push(input[i]); continue;
-    }
-    if(is_operator(input[i])) {
-      assert(stack.size() >= 2);
-      operand1 = stack.top();
-      stack.pop();
-      operand2 = stack.top();
-      stack.pop();
-      switch(input[i]) {
-        case'+':{ stack.push((operand2-'0') + (operand1-'0') + '0');continue; }
-        case'-':{ stack.push((operand2-'0') - (operand1-'0') + '0');continue; }
-        case'*':{ stack.push((operand2-'0') * (operand1-'0') + '0');continue; }
-        case'/':{ stack.push((operand2-'0') / (operand1-'0') + '0');continue; }
-      }
-    }
+void calculate(const string& input) {
+  if(is_operand(input)) { 
+    stacks.push(input); 
   }
-  int result = stack.top() - '0';
-  stack.pop();
-  return result;
+  else 
+    if(is_operator(input)) {
+      assert(stacks.size() >= 2);
+      operand1 = stod( stacks.top() );
+      stacks.pop();
+      operand2 = stod( stacks.top() );
+      stacks.pop();
+      
+      switch( input[0] ) {
+        case'+':{ stacks.push( to_string(operand2 + operand1) ); break; }
+        case'-':{ stacks.push( to_string(operand2 - operand1) ); break; }
+        case'*':{ stacks.push( to_string(operand2 * operand1) ); break; }
+        case'/':{ stacks.push( to_string(operand2 / operand1) ); break; }
+      }
+    } else {
+        cerr << "invalid_argument :: " + input << endl;
+        exit(1);
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -55,11 +62,14 @@ int main(int argc, char* argv[]) {
     f.open(argv[1], ios::in);
     getline(f, data); 
     while(data != "") {
-      expression.append(data);
+      cout << data << endl;
+      calculate(data);
       getline(f, data);
-    }
-    f.close(); 
-    cout<<"result: " << calculate(expression) << endl;
+   }
+   f.close();  
+   double result = stod(stacks.top());
+   stacks.pop();
+   cout << "Result: " << result << endl;
   }
   return 0;
 }
