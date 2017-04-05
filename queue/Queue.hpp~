@@ -1,0 +1,21 @@
+#ifndef queue_h
+#define queue_h
+
+//
+// abstract Queue
+//
+#define MAX_SIZE 100
+class Queue {
+private:
+  int A[MAX_SIZE];
+  int front, rear; 
+public:
+  Queue(){}
+  bool IsEmpty(){}
+  bool IsFull(){}
+  void Enqueue(int){}
+  void Dequeue(){}
+  int  Front(){}
+};
+
+#endif
