@@ -15,81 +15,200 @@ struct Node {
 template<typename T>
 class BinaryTree {
 private:
-	Node<T>* root;
-  
+    Node<T>* root ;
+ 
+    int countLeaves(Node<T>* node){
+        if( node == NULL )
+          return 0;
+        if( node->left == NULL && node->right == NULL ) {
+          return 1;
+        } else {
+          return countLeaves(node->left) + countLeaves(node->right);
+        }
+    }
+    
+    int getWidth(int level, Node<T>* root) {
+      if(root == NULL)
+        return 0;
+      if(level == 1)
+        return 1;
+      else if (level > 1)
+        return getWidth(level-1, root->left) + getWidth(level-1, root->right);
+    }
+    
+    int height(Node<T>* node) {
+        if (node==NULL)
+         return 0;
+        else {
+         /* compute the height of each subtree */
+         int lHeight = height(node->left);
+         int rHeight = height(node->right);
+         /* use the larger one */
+        return (lHeight > rHeight)? (lHeight+1): (rHeight+1);
+       }
+    }
+
+    void printGivenLevel(Node<T>* root, int level) {
+        if (root == NULL)
+            return;
+        if (level == 1)
+            cout << root->data << " ";
+        else if (level > 1) {
+            printGivenLevel(root->left, level-1);
+            printGivenLevel(root->right, level-1);
+        }
+    }
+    
 public:
-  /* BinaryTree(Element<T>* arr int size) { */
-  /*   Node<T>** matrix = new Node<T>*[size]; */
-  /*   for(int i(0); i < size; ++i) */
-  /*     matrix[i] = new Node<T>(arr[i].data); */
-  /*   root = matrix[0]; */
-  /*   for(int i(0); i < size; ++i) { */
-  /*     if( arr[i].right != -1 ) */
-  /*       matrix[i]->right = matrix[arr[i].right]; */
-  /*     if( arr[i].left != -1 ) */
-  /*       matrix[i]->left = matrix[arr[i].left];       */
-  /*   } */
-  /* } */
-  
-	BinaryTree(Node<T>* r = 0) : root(r) {};
+    
+    BinaryTree(Node<T>* r = 0) : root(r) {};
 
-	void travers() {
-		inorder(root);
-		cout << endl;
-		preorder(root);
+    void travers() {
+	norder(root);
+	cout << endl;
+	preorder(root);
+    }
+
+    void inorder(Node<T>* root) {
+	if (root == NULL) return;
+            inorder(root->left);
+            cout << root->data << " ";
+            inorder(root->right);
 	}
 
-	void inorder(Node<T>* root) {
-		if (root == NULL) return;
-		inorder(root->right);
-		cout << root->data << " ";
-		inorder(root->left);
-	}
-
-	void preorder(Node<T>* root) {
-		if (root == NULL) return;
-		cout << root->data << " ";
-		preorder(root->right);
-		preorder(root->left);
+    void preorder(Node<T>* root) {
+	if (root == NULL) return;
+	    cout << root->data << " ";
+	    preorder(root->left);
+            preorder(root->right);
 	}
 	
-	bool isEmpty() { return root == NULL; }
+    bool isEmpty() { return root == NULL; }
 
-  bool search(T element) {
-    Node<T>* current = root; // Start from the root
-    while (current != NULL)
-      if (element < current->data) {
-        current = current->left; // Go left
-      }
-      else if (element > current->data) {
-        current = current->right; // Go right
-      }
-      else // Element matches current.element
-        return true; // Element is found
-    return false; // Element is not in the tree
-  }
+    bool search(T element) {
+        Node<T>* current = root;
+        while (current != NULL)
+        if (element < current->data) {
+            current = current->left;
+        }
+        else if (element > current->data) {
+            current = current->right;
+        }
+        else          
+            return true; 
+        return false; 
+    } 
 
-  boolean insert(T e) {
-    if (isEmpty())
-      // Create the node for e as the root;
-      root = new Node<T>(0);
-    else {
-      // Locate the parent node
-      parent = current = root;
-      while (current != null)
-        if (e < the value in current.element) {
-          parent = current;       // Keep the parent
-          current = current.left; // Go left
+    bool insert(T e) {
+        if (isEmpty())
+            root = new Node<T>(0);
+        else {
+          Node<T>* parent = root;
+          Node<T>* current = root;
+
+         while (current != NULL)
+          if (e < current->data) {
+            parent = current;       // Keep the parent
+            current = current->left; // Go left
+            }
+          else if (e > current->data) {
+            parent = current;        // Keep the parent
+            current = current->right; // Go right
           }
-        else if (e > the value in current.element) {
-          parent = current;        // Keep the parent
-          current = current.right; // Go right
-          }
-        else
-          return false; // Duplicate node not inserted
-        // Create a new node for e and attach it to parent
-        return true; // Element inserted
+          else
+            return false; // Duplicate node not inserted
+          Node<T>* element = new Node<T>(e);
+          if (e < parent->data) {
+              parent->left = element;  
+            }
+          else{
+              parent->right = element;  
+            }
+          return true; // Element inserted
+        }
+    }
+    
+    bool drop(T e) {
+        // Locate the node to be deleted and also locate its parent node
+        Node<T>* parent = NULL;
+        Node<T>* current = root;
+        while (current != NULL) {
+            if (e < current->data) {
+               parent = current;
+               current = current->left;
+            }
+            else if (e > current->data) {
+                parent = current;
+                current = current->right;
+            }
+            else
+                break; // Element is in the tree pointed at by current
+        }
+        if (current == NULL)
+            return false; // Element is not in the tree
+        // Case 1: current has no left child
+        if (current->left == NULL) {
+            // Connect the parent with the right child of the current node
+            if (parent == NULL) {
+                root = current->right;
+            }
+            else {
+                if (e < parent->data)
+                   parent->left = current->right;
+                else
+                   parent->right = current->right;
+            }
+            delete current;
+        }
+        // Case 2: The current node has a left child.
+        else {
+            // Locate the rightmost node in the left subtree of
+            // the current node and also its parent.
+            Node<T>* parentOfRightMost = current;
+            Node<T>* rightMost = current->left;
+            while (rightMost->right != NULL) {
+                parentOfRightMost = rightMost;
+                rightMost = rightMost->right; // Keep going to the right
+            }
+            // Replace the element in current by the element in rightMost
+            current->data = rightMost->data;
+            // Eliminate rightmost node            
+            if (parentOfRightMost->right == rightMost)
+                parentOfRightMost->right = rightMost->left;
+            else
+                // Special case: parentOfRightMost == current
+                parentOfRightMost->left = rightMost->left;
+            delete rightMost;
+        }
+        return true; // Element deleted successfully
+    }
+    
+    int height() {
+        height(root);
+    }
+    
+    int getMaxWidth() {
+      int maxWidth = 0; 
+      for(int i = 1; i <= height(); ++i) {
+          int w = getWidth(i);
+          if( w > maxWidth ) maxWidth = w; 
       }
+      return maxWidth;
+    }
+  
+    int getWidth(int level) {
+        getWidth(level, root);
+    }
+    
+    int countLeaves(){
+       countLeaves(root);
+    }
+  
+    void printLevelOrder() {
+        for(int i = 1; i <= height(); ++i)
+            printGivenLevel(root, i);
+    }
+    
 };
 
 #endif // !_bTree_h_
