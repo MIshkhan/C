@@ -1,6 +1,9 @@
 #ifndef binaryTree_h
 #define binaryTree_h
 
+#include <stack>
+#include <string>
+
 using namespace std;
 
 template<typename T>
@@ -59,30 +62,103 @@ private:
         }
     }
     
+    void inorder(Node<T>* root) {
+	if (root == NULL) return ;
+        inorder(root->left);
+        cout << root->data;
+        inorder(root->right);
+    }
+    
+    /* Iterative function for inorder tree traversal */
+    void iterativeInorder(Node<T>* root){
+      Node<T> *current = root;
+      stack< Node<T>* > s ;
+      bool done = 0;
+      while (!done) {
+        if(current !=  NULL) {
+          s.push(current);                                                  
+          current = current->left;  
+        }
+        else {
+          if (!s.empty()) {
+            current = s.top();
+            s.pop();
+            cout << current->data;
+            current = current->right;
+          }
+          else
+            done = 1; 
+        }
+      } 
+    }
+    
+    /* An iterative  preorder traversal */
+    void iterativePreorder(Node<T>* root) {
+        if (root == NULL)
+           return;
+        stack< Node<T>* > nodeStack;
+        nodeStack.push(root);
+        while (nodeStack.empty() == false) {
+            Node<T>* node = nodeStack.top();
+            nodeStack.pop();
+            cout << node->data;
+            if (node->right)
+                nodeStack.push(node->right);
+            if (node->left)
+                nodeStack.push(node->left);
+        }
+    } 
+    
+    double sum (Node<T>* root) {
+       if (root == NULL) return 0;
+       return root->data + sum (root->left) + sum (root->right);
+    }
+    
+    bool full(Node<T>* tree) { 
+        if (tree == NULL) return true;
+        int count = ( tree->left == NULL ? 0 : 1 ) + ( tree->right == NULL ? 0 : 1 );
+        return count != 1 && full(tree->left) && full(tree->right);
+    }
+    
 public:
     
     BinaryTree(Node<T>* r = 0) : root(r) {};
 
     void travers() {
-	norder(root);
+	inorder(root);
 	cout << endl;
 	preorder(root);
     }
 
-    void inorder(Node<T>* root) {
-	if (root == NULL) return;
-            inorder(root->left);
-            cout << root->data << " ";
-            inorder(root->right);
-	}
+    void inorder() {
+        inorder(root);
+    }
 
+    /* Iterative function for inorder tree traversal */
+    void iterativeInorder() {
+        iterativeInorder(root);
+    }
+    
     void preorder(Node<T>* root) {
 	if (root == NULL) return;
 	    cout << root->data << " ";
 	    preorder(root->left);
             preorder(root->right);
-	}
+    }
 	
+    /* An iterative preorder traversal  */
+    void iterativePreorder() {
+        iterativePreorder(root);
+    }
+    
+    double sum() {
+        sum(root);
+    }
+    
+    bool full() {
+        full(root);
+    }
+    
     bool isEmpty() { return root == NULL; }
 
     bool search(T element) {
