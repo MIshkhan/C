@@ -20,9 +20,9 @@ int main() {
     cin >> data;
     tree.insert(data);
   }
-  
-  //stree.drop(1);
-  //tree.travers();
+/*
+  stree.drop(1);
+  tree.travers();  
   cout << endl;
   cout << "Number of leaves: " << tree.countLeaves() << endl; 
   cout << "Width in 1 level: " << tree.getWidth(1) << endl;   
@@ -30,5 +30,10 @@ int main() {
   cout << "Maximum width: " << tree.getMaxWidth() << endl; 
   cout << "Height: " << tree.height() << endl; 
   cout << "Level order: "; tree.printLevelOrder(); cout << endl; 
+*/
+  cout << "Interactive inorder: "; tree.iterativeInorder(); cout << endl; 
+  cout << "Interactive preorder: "; tree.iterativePreorder(); cout << endl; 
+  cout << "Sum of nodes: " << tree.sum() << endl;
+  cout << "Is tree full: " << tree.full() << endl;
   return 0;
 }
