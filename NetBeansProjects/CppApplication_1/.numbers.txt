@@ -1,1 +1,1 @@
-cat dog hot-dog exit cat
+1 2 -5 5.8 9 -20 -1 0
