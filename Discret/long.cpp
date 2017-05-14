@@ -1,73 +1,83 @@
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <vector>
-#include <list>
 
 using namespace std;
 
-const int size = 10;
-vector< pair<int,int> > ways;
 vector< vector<int> > graph;
-int visited[size][size];
+vector< vector<int> > visited;
 
-string PRINT_ELEMENTS (){
-  string result;
-  for (int i = 0; i < ways.size(); ++i) {
-    std::stringstream out1, out2;
-    out1 << ways[i].first + 1;
-    out2 << ways[i].second + 1;
-    result += "( " + out1.str() + ":" + out2.str()  + " )";
+struct Path {
+  pair<int, vector<string> > max_paths = pair<int, vector<string> > (0, vector<string>());
+  string direction;
+  size_t length;
+  
+  void addEdge( int peak, int i ) {
+    length++;
+    direction += "( " + to_string( peak + 1 ) + ":" + to_string( graph[peak][i] + 1 ) + " )";
+    if( max_paths.first < length )
+      max_paths = pair<int, vector<string> >(length, vector<string>(1, direction));
+    else if ( max_paths.first == length )
+      max_paths.second.push_back(direction);
   }
-  return result;
-}
 
-void findPath ( int peak ){
-  // cout << "This is for vertex " << peak+1 << " which size is " << graph[peak].size() << endl;
-  static string prev = "";
+  void removeLastEdge() {
+    length--;
+    direction = direction.substr(0, direction.find_last_of("("));
+  }
+
+  string getMaxPath() {
+    string result = "";
+    for(int i = 0; i < max_paths.second.size(); ++i) {
+      result += max_paths.second[i] + "\n";
+    }
+    return result;
+  }
+  
+};
+
+static Path path; 
+
+void findPath ( int peak ) {
   for(int i = 0; i < graph[peak].size(); ++i ) {
-    if( visited[peak][graph[peak][i]] == 0) {
-      //cout << "For " << peak+1 << " pushed ( " << peak+1 << ", " << graph[peak][i]+1 << " ) ->" << prev << endl; 
-      visited[peak][graph[peak][i]] = 1; visited[graph[peak][i]][peak] = 1; ways.push_back(make_pair(peak, graph[peak][i]));
+    if(visited[peak][graph[peak][i]] == 0) {
+      
+      visited[peak][graph[peak][i]] = 1; visited[graph[peak][i]][peak] = 1;
+      path.addEdge(peak, i);
       
       findPath(graph[peak][i]);
 
-      visited[peak][graph[peak][i]] = 0; visited[graph[peak][i]][peak] = 0; ways.pop_back();
-      //cout << "For " << peak+1 << " poped ( " << peak+1 << ", " << graph[peak][i]+1 << " )" << endl; 
-
-    }
-    else {
-      prev = "";
-    }
-    if(i==graph[peak].size()-1) {
-      if((prev.find(PRINT_ELEMENTS()) == string::npos)) {
-	cout << PRINT_ELEMENTS() << endl;
-	prev += PRINT_ELEMENTS();
-      }
+      visited[peak][graph[peak][i]] = 0; visited[graph[peak][i]][peak] = 0;
+      path.removeLastEdge();
 
     }
   }
 }
 
 int main(){
-  int n, x, i, y;
+  int n, x, i, y, size;
 
-  cout << "Input array size: ";
+  cout << "Input number of vertexis in graph: ";
+  cin >> size; 
+  cout << "Input number of edges: ";
   cin >> n;
-  graph = vector< vector<int> >(n);
+  cout << "Input edges: " << endl;
 
+  graph = vector< vector<int> >(n);
+  visited = vector< vector<int> >(size, vector<int>(size));
+  
   for(i = 0; i < n; ++i) {
-    cin >> x >> y;
-    x--, y--;
-    graph[x].push_back(y);
-    graph[y].push_back(x);
+      cin >> x >> y;
+      x--, y--;
+      graph[x].push_back(y);
+      graph[y].push_back(x);
   }
 
   for( i = 0; i < n; ++i) {
-    findPath(i);
-    cout << endl << endl;
+      findPath(i);
   }
-  
+  cout << path.getMaxPath();
+
   return 0;
 }
 
