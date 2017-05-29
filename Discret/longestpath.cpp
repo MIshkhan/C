@@ -11,34 +11,6 @@ using namespace std;
 vector< vector<int> > graph;
 vector< int > visited;
 
-void dfs(int s,  bool visited[]) {
-  list<int> tmp;
-  visited[s] = true; 
-  tmp.push_back(s);
-  
-  while (!tmp.empty()) {
-    s = tmp.front();
-    tmp.pop_front();
-    for (vector<int>::iterator i = graph[s].begin(); i != graph[s].end(); ++i) {
-      if (!visited[*i]) {
-	visited[*i] = true;
-	tmp.push_back(*i);
-      }
-    }
-  }
-}
-
-bool isConnected() {
-  bool *visited = new bool(graph.size());
-  for(int i = 0; i < graph.size(); ++i)
-    visited[i] = false;
-  dfs(0, visited);
-  for(int i = 0; i < graph.size(); ++i)
-    if(visited[i] == false)
-      return false;
-  return true;
-}
-
 struct Path {
   pair<int, vector<string> > max_paths = pair<int, vector<string> > (0, vector<string>());
   string direction;
@@ -67,8 +39,35 @@ struct Path {
   }
 };
 
-static Path path; 
+void dfs(int s,  bool visited[]) {
+  list<int> tmp;
+  visited[s] = true; 
+  tmp.push_back(s);
+  
+  while (!tmp.empty()) {
+    s = tmp.front();
+    tmp.pop_front();
+    for (vector<int>::iterator i = graph[s].begin(); i != graph[s].end(); ++i) {
+      if (!visited[*i]) {
+	visited[*i] = true;
+	tmp.push_back(*i);
+      }
+    }
+  }
+}
 
+bool isConnected() {
+  bool *visited = new bool(graph.size());
+  for(int i = 0; i < graph.size(); ++i)
+    visited[i] = false;
+  dfs(0, visited);
+  for(int i = 0; i < graph.size(); ++i) 
+    if(visited[i] == false)
+      return false;
+  return true;
+}
+
+static Path path;
 void findPath ( int peak ) {
   visited[peak] = 1; 
   for(int i = 0; i < graph[peak].size(); ++i ) {
@@ -125,6 +124,24 @@ void graphInit(string filepath) {
   }
 }
 
+double getP(double prev, int n, int i){
+  return (n-i+1)*prev;
+}
+
+//Full connected
+double complexityForN(int n){
+  double result = 0;
+  vector<double> p = vector<double> (n);
+  p[0] = 1;
+  for(int i = 1; i < n; ++i) {
+    p[i] = getP(p[i-1], n, i+1);
+  }
+  for(int i = 0; i < n; ++i) {
+    result += p[i];
+  }
+  return n*(n-1)*result;
+}
+
 int main(int argc, char* argv[]) {
   if (argc != 2 ) {
     cout << "You must input a file path!\n";
@@ -141,32 +158,3 @@ int main(int argc, char* argv[]) {
   cout << "Max paths :\n" << path.getMaxPaths();
   return 0;
 }
-
-// int main(){
-//   int n, x, i, y, size;
-
-//   cout << "Input number of vertexis in graph: ";
-//   cin >> size; 
-//   cout << "Input number of edges: ";
-//   cin >> n;
-//   cout << "Input edges: " << endl;
- 
-//   graph = vector< vector<int> >(size);
-//   visited = vector<int>(size);
-  
-//   for(i = 0; i < n; ++i) {
-//       cin >> x >> y;
-//       x--, y--;
-//       graph[x].push_back(y);
-//       graph[y].push_back(x);
-//   }
-
-//   for( i = 0; i < size; ++i) {
-//     findPath(i);
-//   }
-
-//   cout << "Is graph connected: " << (isConnected() == 1? "true" : "false") << endl;
-//   cout << "Max paths :\n" << path.getMaxPaths();
-//   cout << t << endl;
-//   return 0;
-// }
