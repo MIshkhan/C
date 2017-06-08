@@ -31,68 +31,119 @@ class Registers {
   
 };
 
-class Operation {
+class Operations {
 
   public:
-
-  void add( bitset<8>& r1, bitset<8>& r2 ) {
-    r1 = bitset<8>(r1.to_ulong() + r2.to_ulong());
-  }
-
-  void assign() {
-
-  }
-
-  //Returns binary representation of assembler operations  
-  bitset<16> opCode(string name) {
+  
+  typedef void(Operations::*myFunc)(bitset<8>&, bitset<8>);
+  
+  myFunc opFunc(string name) {
     if( opMap.find(name) == opMap.end() )
       throw runtime_error("Illegal operation: " + name);
     return opMap[name];
   }
 
   private:
+
+  void add( bitset<8>& r1, bitset<8> r2 ) {
+    r1 = bitset<8>(r1.to_ulong() + r2.to_ulong());
+  }
   
-  //Binary representation of assembler operations
-  map<string, bitset<16>> opMap = {
-    //integral arithmetic 
-    {"ADD" ,  bitset<16>(0)},
-    {"ADC" ,  bitset<16>(1)},
-    {"SUB" ,  bitset<16>(2)},
-    {"SBB" ,  bitset<16>(3)},
-    {"MUL" ,  bitset<16>(4)},
-    {"IMUL",  bitset<16>(5)},
-    {"DIV" ,  bitset<16>(6)},
-    {"IDIV",  bitset<16>(7)},
-    {"INC" ,  bitset<16>(8)},
-    {"DEC" ,  bitset<16>(9)}, 
-    {"NEG" ,  bitset<16>(10)},
-    //logical 
-    {"AND" ,  bitset<16>(11)},
-    {"OR"  ,  bitset<16>(12)},
-    {"XOR" ,  bitset<16>(13)},
-    {"NAND",  bitset<16>(14)},
-    {"NOR" ,  bitset<16>(15)},
-    {"NOT" ,  bitset<16>(16)},
-    //assignment 
-    {"ASSIGN", bitset<16>(17)},
-    //move
-    {"MOVE", bitset<16>(18)},
-    {"SWAP", bitset<16>(19)},
-    //memory
-    {"LOAD", bitset<16>(20)},
-    {"STORE", bitset<16>(21)}
+  void sub( bitset<8>& r1, bitset<8> r2 ) {
+    r1 = bitset<8>(r1.to_ulong() - r2.to_ulong());
+  }
+
+  void mul( bitset<8>& r1, bitset<8> r2 ) {
+    r1 = bitset<8>(r1.to_ulong() * r2.to_ulong());
+  }
+
+  void inc( bitset<8>& r1 ) {
+    r1 = bitset<8>(r1.to_ulong() + 1);
+  }
+
+  void dec( bitset<8>& r1 ) {
+    r1 = bitset<8>(r1.to_ulong() - 1);
+  }
+  
+  void mov( bitset<8>& r1, bitset<8> value ) {
+    r1 = value;
+  }
+  
+  //Functional representation of assembler operations
+  map<string, myFunc> opMap = {
+    {"ADD", &Operations::add},
+    {"SUB", &Operations::sub},
+    {"MUL", &Operations::mul},
+    {"MOV", &Operations::mov}
   };
 
 };
 
-int main() {
-  Operation o;
-  Registers r;
+Operations o; 
+Registers r;
+
+void executeAndPrintInfo( string line ) {
+  string e1 = "R_8\\[[0-9]+\\] [0-1][0-1][0-1][0-1][0-1][0-1][0-1][0-1]";
+  string e2 = "R_8\\[[0-9]+\\] R_8\\[[0-9]+\\]";
+  int regsterIndex1, regsterIndex2;
+  string command;
+  bitset<8> bits;
+  //operation register bits
+  if ( regex_match(line, regex("ADD "+ e1)) ||
+       regex_match(line, regex("SUB "+ e1)) ||
+       regex_match(line, regex("MUL "+ e1)) ||
+       regex_match(line, regex("MOV "+ e1)) ) {
+    
+    command = line.substr(0, line.find(" ") );
+    regsterIndex1 = stoi(line.substr(line.find("[")+1, line.find("]")));
+    int a = line.find_last_of(" ");
+    bits = bitset<8>(line.substr(a+1, line.length()-a));
+
+    (o.*(o.opFunc(command)))(r.R_8[regsterIndex1], bits);
+    
+    cout << "Excecuting ...   " + line << "   Result: " + r.R_8[regsterIndex1].to_string() << endl;
+  }
+  else
+    //operation register register
+    if (regex_match(line, regex("ADD "+ e2)) ||
+        regex_match(line, regex("SUB "+ e2)) ||
+        regex_match(line, regex("MUL "+ e2)) ||
+        regex_match(line, regex("MOV "+ e2)) ) {
+
+      command = line.substr(0, line.find(" ") );
+      regsterIndex1 = stoi(line.substr(line.find("[")+1, line.find("]")));
+      regsterIndex2 = stoi(line.substr(line.find_last_of("[")+1, line.find_last_of("]")));
+
+      (o.*(o.opFunc(command)))(r.R_8[regsterIndex1], r.R_8[regsterIndex2]);
+    
+      cout << "Excecuting ...   " + line <<  "     Result: " + r.R_8[regsterIndex1].to_string() << endl;
+    }
+    else {
+      throw runtime_error("Wrong assembly command: '" + line + "'");
+      exit(1);
+    }
+}
+
+
+int main(int argc, char* argv[]) {
   
-  r.R_8[0] = bitset<8>("00000011");
-  r.R_8[1] = bitset<8>("00001010");
-  o.add(r.R_8[0], r.R_8[1]);
+  if (argc != 2 ) {
+    cout << "You must input a file path!\n";
+    return 1;
+  }
+  else {
+    fstream f;
+    string data;
+    f.open(argv[1], ios::in);
+    getline(f, data);
+    cout << endl;
+    while(data != "") {
+      executeAndPrintInfo(data);
+      getline(f, data);
+    }
+    cout << endl;
+    f.close();  
+  }
   
-  cout << r.R_8[0].to_string() << endl;
-  return 0;  
+  return 0;
 }
