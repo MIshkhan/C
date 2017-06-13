@@ -8,7 +8,7 @@
 using namespace std;
 
 class Registers {
-  public :
+public :
  
   //Control Register 
   bitset<32>  FLAGS_32;
@@ -20,7 +20,7 @@ class Registers {
   array<bitset<8>, 1024> R_8;
   
   //Address Registers
-  bitset<32>  IP_32;
+  bitset<8>   IP_32;  //It must be 32bit but this is for convenience
   bitset<32>  TR_32;
   bitset<32>  SP_32;
   bitset<32>  SF_32;
@@ -33,7 +33,7 @@ class Registers {
 
 class Operations {
 
-  public:
+ public:
   
   typedef void(Operations::*myFunc)(bitset<8>&, bitset<8>);
   
@@ -43,7 +43,7 @@ class Operations {
     return opMap[name];
   }
 
-  private:
+ private:
 
   void add( bitset<8>& r1, bitset<8> r2 ) {
     r1 = bitset<8>(r1.to_ulong() + r2.to_ulong());
@@ -68,61 +68,123 @@ class Operations {
   void mov( bitset<8>& r1, bitset<8> value ) {
     r1 = value;
   }
+
+  void jump( bitset<8>& r1, bitset<8> value ) {
+    r1 = value;
+  }
   
   //Functional representation of assembler operations
   map<string, myFunc> opMap = {
-    {"ADD", &Operations::add},
-    {"SUB", &Operations::sub},
-    {"MUL", &Operations::mul},
-    {"MOV", &Operations::mov}
+    {"ADD",  &Operations::add},
+    {"SUB",  &Operations::sub},
+    {"MUL",  &Operations::mul},
+    {"MOV",  &Operations::mov},
+    {"JUMP", &Operations::jump}
   };
 
 };
 
-Operations o; 
-Registers r;
-
-void executeAndPrintInfo( string line ) {
-  string e1 = "R_8\\[[0-9]+\\] [0-1][0-1][0-1][0-1][0-1][0-1][0-1][0-1]";
-  string e2 = "R_8\\[[0-9]+\\] R_8\\[[0-9]+\\]";
-  int regsterIndex1, regsterIndex2;
-  string command;
-  bitset<8> bits;
-  //operation register bits
-  if ( regex_match(line, regex("ADD "+ e1)) ||
-       regex_match(line, regex("SUB "+ e1)) ||
-       regex_match(line, regex("MUL "+ e1)) ||
-       regex_match(line, regex("MOV "+ e1)) ) {
-    
-    command = line.substr(0, line.find(" ") );
-    regsterIndex1 = stoi(line.substr(line.find("[")+1, line.find("]")));
-    int a = line.find_last_of(" ");
-    bits = bitset<8>(line.substr(a+1, line.length()-a));
-
-    (o.*(o.opFunc(command)))(r.R_8[regsterIndex1], bits);
-    
-    cout << "Excecuting ...   " + line << "   Result: " + r.R_8[regsterIndex1].to_string() << endl;
+class Ram {
+  
+public:
+  
+  Ram() {
+    ram.reserve(1024);
   }
-  else
-    //operation register register
-    if (regex_match(line, regex("ADD "+ e2)) ||
-        regex_match(line, regex("SUB "+ e2)) ||
-        regex_match(line, regex("MUL "+ e2)) ||
-        regex_match(line, regex("MOV "+ e2)) ) {
 
+  void add(string command) {
+    if( !isFull() ) {
+      ram.push_back(command);
+      ++lastCommandIndex;
+    }
+    else
+      throw runtime_error("Ram is Full ...");
+  }
+  
+  bool isFull() {
+    return ram.size() == ram.capacity();
+  }
+
+  void free() {
+    currentCommand = 0;
+    lastCommandIndex = 0;
+    ram.clear();
+  }
+
+  string fetch(unsigned long address) {
+    if(address < lastCommandIndex)
+      return ram[address++];
+    else
+      return "";
+  }
+
+  void traverseAndPrint() {
+    r.IP_32 = bitset<8>(0);
+    string command = fetch( r.IP_32.to_ulong() );
+    while( command != "" ) {
+      r.IP_32 = bitset<8>(r.IP_32.to_ulong() + 1);
+      decodeExecuteAndPrintInfo(command);
+      command = fetch( r.IP_32.to_ulong() );
+    }
+  }
+
+private:
+
+  vector<string> ram;
+  int lastCommandIndex = 0;
+  int currentCommand = 0;
+  Operations o; 
+  Registers r;
+  
+  void decodeExecuteAndPrintInfo( string line ) {
+    string e1 = "R_8\\[[0-9]+\\] [0-1][0-1][0-1][0-1][0-1][0-1][0-1][0-1]";
+    string e2 = "R_8\\[[0-9]+\\] R_8\\[[0-9]+\\]";
+    int regsterIndex1, regsterIndex2;
+    string command;
+    bitset<8> bits;
+    //operation register bits
+    if ( regex_match(line, regex("(ADD|SUB|MUL|MOV) "+ e1)) ) {
+    
+      command = line.substr(0, line.find(" ") );
+      regsterIndex1 = stoi(line.substr(line.find("[")+1, line.find("]")));
+      int a = line.find_last_of(" ");
+      bits = bitset<8>(line.substr(a+1, line.length()-a));
+
+      (o.*(o.opFunc(command)))(r.R_8[regsterIndex1], bits);
+    
+      cout << "Excecuting ...   " + line << "   Result: " + r.R_8[regsterIndex1].to_string() << endl;
+      return;
+    }
+    //operation register register
+    if (regex_match(line, regex("(ADD|SUB|MUL|MOV) "+ e2)) ) {
+    
       command = line.substr(0, line.find(" ") );
       regsterIndex1 = stoi(line.substr(line.find("[")+1, line.find("]")));
       regsterIndex2 = stoi(line.substr(line.find_last_of("[")+1, line.find_last_of("]")));
-
+    
       (o.*(o.opFunc(command)))(r.R_8[regsterIndex1], r.R_8[regsterIndex2]);
     
       cout << "Excecuting ...   " + line <<  "     Result: " + r.R_8[regsterIndex1].to_string() << endl;
+      return;
     }
-    else {
-      throw runtime_error("Wrong assembly command: '" + line + "'");
-      exit(1);
+    //JUMP bits
+    if (regex_match(line, regex("JUMP [0-1][0-1][0-1][0-1][0-1][0-1][0-1][0-1]")) ) {
+
+      command = line.substr(0, line.find(" ") );
+      int a = line.find_last_of(" ");
+      bits = bitset<8>(line.substr(a+1, line.length()-a));
+
+      (o.*(o.opFunc(command)))(r.IP_32, bits);
+    
+      cout << "Excecuting ...   " + line <<  "         IP: " + r.IP_32.to_string() << endl;
+      return;
     }
-}
+    //otherwise
+    throw runtime_error("Wrong assembly command: '" + line + "'");
+    exit(1);
+  }
+};
+
 
 
 int main(int argc, char* argv[]) {
@@ -131,18 +193,21 @@ int main(int argc, char* argv[]) {
     cout << "You must input a file path!\n";
     return 1;
   }
+  //RAM init
   else {
+    Ram ram;
     fstream f;
     string data;
+    
     f.open(argv[1], ios::in);
     getline(f, data);
-    cout << endl;
     while(data != "") {
-      executeAndPrintInfo(data);
+      ram.add(data);
       getline(f, data);
     }
     cout << endl;
-    f.close();  
+    f.close();
+    ram.traverseAndPrint();
   }
   
   return 0;
