@@ -11,17 +11,7 @@
 #include "game.hpp"
 using namespace std;
 
-
 const char* game::address = "f.txt";
-
-//void print_menu(const vector<string>& menu) const{
-//	for(int i(0);i<menu.size();i++){
-//		for(int j(0);i<menu[i].size();j++){
-//			printw("%c",menu[i][j]);
-//		}
-//		printw('\n');
-//	}
-//}
 
 void print_menu(const vector<string>& page) {
 	clear();
@@ -32,30 +22,26 @@ void print_menu(const vector<string>& page) {
 	}
 }
 
-
-
 int menu(){
-	initscr();
+ begin:	
 	int x = 6;
 	int y = 20;
-	
-	int state = 0; 
-		
+	int state = 0;     
 	vector<string> page;
 	page.push_back("*****************************************");
 	page.push_back("*                                       *");
 	page.push_back("*                       -----------     *");
-	page.push_back("*      (\\____/)        | X O Z U K |    *");
+	page.push_back("*      (\\____/)        | P I G G Y |    *");
 	page.push_back("*      / @__@ \\         -----------     *");
 	page.push_back("*     (  (oo)  )                        *");
-	page.push_back("*      `-.~~.-'     -> SINGLE   MATH    *");
+	page.push_back("*      `-.~~.-'     -> SINGLE   GAME    *");
 	page.push_back("*       /   \\                           *");
-	page.push_back("*     @/     \\_        FRIENDLY MATH    *");
+	page.push_back("*     @/     \\_        FRIENDLY GAME    *");
 	page.push_back("*    (/ /   \\ \\)                        *");
 	page.push_back("*     WW`----'WW       EXIT             *");
 	page.push_back("*                                       *");	
 	page.push_back("*****************************************");
-		
+	clear();	
 	char c;//for getch
 	while(true){
 		print_menu(page);
@@ -63,7 +49,6 @@ int menu(){
 		switch(c){
 			case 66:{ // up
 				if(x < 10){
-				
 					page[x+2][y] = page[x][y];
 					page[x+2][y+1] = page[x][y+1];
 					page[x][y] = ' ';
@@ -80,7 +65,6 @@ int menu(){
 			}
 			case 65:{ //down
 				if(x > 6){
-				
 					page[x-2][y] = page[x][y];
 					page[x-2][y+1] = page[x][y+1];
 					page[x][y] = ' ';
@@ -96,7 +80,6 @@ int menu(){
 				break;
 			}
 			case '\n':{ //enter
-				endwin();
 				switch(state){
 					case 0:{
 						switch(x){
@@ -113,20 +96,12 @@ int menu(){
 						break;
 					}
 					case 1:{
-					switch(x){
+					   switch(x){
 							case 6:{	return 1;	} // for player 1
 							case 8:{	return 2;	} // for player 2
-							case 10:{
-								state = 0;
-								page[x][y]  = ' ';
-								page[x][y+1]= ' ';
-								x = 6;
-								page[6] = ("*      `-.~~.-'     -> SINGLE   MATH    *");
-								page[8] = ("*     @/     \\_        FRIENDLY MATH    *");
-								break;
-							}
-						}
-						break;
+							case 10:{ goto begin;}
+				       }
+				       break;
 					}
 				}				
 			}			
@@ -135,90 +110,56 @@ int menu(){
 }
 
 void game::start(){  
-	fstream f;
-    
+ begin:   	
+    fstream f;
+    initscr();  
     current_player.turn = menu();
     
     if(current_player.turn == 1 || current_player.turn == 0) {
         f.open(address, ios::out); // cleaning file
         f.close();
         current_player.turn == 1 ? updateCards(getShuffledCards(), getCardsFromBoard() , 1) : updateCards(getShuffledCards(), getCardsFromBoard() , 0);
-    }
-    initscr();    
+    }   
     printInfo();
     ostringstream ss;
-    ss << current_player.turn;  
-       
-         switch(current_player.turn){
-        	 case 0:{ // Game with Computer
-         		halfdelay(15);
-        		while(true) { 
-            	if(isGameOver()) { endwin(); return; }// Game Over
-            	chooseCard();  // me
-            	printInfo(); 
-            	getch();
-            	chooseCardForComp();// computer
-            	printInfo();            
-       		}
-       		break;
-         	 }
-         	 case 1: case 2:{
-         	 	halfdelay(2);
-         	 	do {           // Game with human
-            		printInfo();
-            		usleep(500000);
-            		f.open(address, ios::in);
-            		string data;
-            		getline(f, data); // player's name
-            		f.close(); 
-            		if(data.find("Player_")!=std::string::npos && isGameOver()) { endwin(); return; }// Game Over
-            		if(!data.compare("Player_"+ss.str())){ 
-              			chooseCard();
-            		}	
-            		printInfo();    
-            		getch();
-        		} while(true);
-        		break;
-         	 }
-         	 case 3:{
-         	 	endwin();
-         	 	return;
-         	 }
+    ss << current_player.turn;      
+    switch(current_player.turn){
+        case 0:{ // Game with Computer
+            halfdelay(15);
+            while(true) { 
+                if(isGameOver()) { endwin(); goto begin;} // Game Over -> Go to Menu
+                chooseCard();  // me
+                printInfo(); 
+                getch();
+                chooseCardForComp();// computer
+                printInfo();            
+            }
+            break;
+        }
+        case 1: case 2:{ // Game with human
+            halfdelay(2);
+            do {           
+                printInfo();
+                usleep(500000);
+                f.open(address, ios::in);
+                string data;
+                getline(f, data); // player's name
+                f.close(); 
+                if(data.find("Player_")!=std::string::npos && isGameOver()) { endwin(); goto begin;} // Game Over -> Go to Menu
+                if(!data.compare("Player_"+ss.str())){ 
+                    chooseCard();
+                }	
+                printInfo();    
+                getch();
+            } while(true);
+            break;
          }
-    endwin();
-    
-    /*
-    if(current_player.turn == 0){  // Game with Computer
-    halfdelay(15);
-        while(true) {
-            if(isGameOver()) { endwin(); return; }// Game Over
-            chooseCard();  // me
-            printInfo(); 
-            //usleep(500000);
-            getch();
-            chooseCardForComp();// computer
-            printInfo();
-            
+        case 3:{
+            endwin();
+            return;
         }
     }
-    else do {           // Game with human
-            printInfo();
-            usleep(500000);
-            f.open(address, ios::in);
-            string data;
-            getline(f, data); // player's name
-            f.close(); 
-            if(data.find("Player_")!=std::string::npos && isGameOver()) { endwin(); return; }// Game Over
-            if(!data.compare("Player_"+ss.str())){ 
-                chooseCard();
-            }
-            printInfo();    
-            getch();
-        }
-         while(true);  
     endwin();
-    
-    */
 }
 
 vector<int> game::getShuffledCards() const {
@@ -278,30 +219,25 @@ vector<int> game::getCardsFromBoard() const {
 }
 
 void game::input_card_on_page(int i, int j, int card, vector<string>& page) const {
-    for(int n = 0; n < 5; ++n) {
-        page[i+1][j+n+6] = '_';
-    }                                                  //      _____  
+    for(int n = 0; n < 5; ++n) page[i+1][j+n+6] = '-'; //      -----  
     page[i+2][j+5] = '|'; page[i+2][j+11] = '|';       //     |     | 
     page[i+3][j+5] = '|'; page[i+3][j+11] = '|';       //     |     | 
     page[i+4][j+5] = '|'; page[i+4][j+11] = '|';       //     |     | 
-    page[i+5][j+5] = '|'; page[i+5][j+11] = '|';		//     |_____| 
-    for(int n = 0; n < 5; ++n) {                       
-        page[i+5][j+n+6] = '_';    
+    for(int n = 0; n < 5; ++n) page[i+5][j+n+6] = '-'; //      -----      
+    switch(card%10){
+        case 6 :page[i+2][j+6]= '6';  break;
+        case 7 :page[i+2][j+6]= '7';  break; 
+        case 8 :page[i+2][j+6]= '8';  break;
+        case 9 :page[i+2][j+6]= '9';  break;
+        case 0 :{ 
+                    page[i+2][j+6]= '1'; 
+                    page[i+2][j+7] = '0'; break; 
+                }
+        case 1 :page[i+2][j+6]= 'J';  break;
+        case 2 :page[i+2][j+6]= 'Q';  break;
+        case 3 :page[i+2][j+6]= 'K';  break;
+        case 4 :page[i+2][j+6]= 'T';  break;  
     }
-    switch(card%10) {
-        case 6 : page[i+2][j+6] = '6';  break;
-        case 7 : page[i+2][j+6] = '7';  break; 
-        case 8 : page[i+2][j+6] = '8';  break;
-        case 9 : page[i+2][j+6] = '9';  break;
-        case 0 : 
-            page[i+2][j+6] = '1'; 
-            page[i+2][j+7] = '0'; 
-        break; 
-        case 1 : page[i+2][j+6] = 'J';  break;
-        case 2 : page[i+2][j+6] = 'Q';  break;
-        case 3 : page[i+2][j+6] = 'K';  break;
-        case 4 : page[i+2][j+6] = 'T';  break;  
-    }  
     switch(card/10) {
         case 1: page[i+3][j+8] = 'H';  break; // ♥
         case 2:	page[i+3][j+8] = 'D';  break; // ♦
@@ -336,7 +272,7 @@ void game::updateCards(const vector<int>& cardsInDeck, const vector<int>& cardsO
     fstream f;
     f.open(address, ios::out);	
     std::ostringstream ss;
-    ss << current_player.turn;
+    ss << nextPlayersIndex;
     f << "Player_" << ss.str();
     f << "\n---Cards in Deck---\n";
     for(int i=0; i<cardsInDeck.size(); ++i){
@@ -412,58 +348,39 @@ int game::print_moveable_page(const string& name1, const vector<int>& cards1,
             case ERR: break;   
 			case 65: { //up
 			    move_card_down(page,x,y); 
-			    if(y>1) { 
-			        y-=6; 
-			    } else if(size%9*11-6 >= x) {
-			        y = (size/9 + 1)*6-5; 
-			    } else { 
-			        y = size/9*6-5; 
-			    } move_card_up(page,x,y); 
+			    if(y>1) y-=6; 
+			    else if(size%9*11-6 >= x) y = (size/9 + 1)*6-5; 
+			    else y = size/9*6-5; 
+			    move_card_up(page,x,y); 
 			    break; 
 			} 
 			case 66: { //down
 			    move_card_down(page,x,y); 
-			    if(size-((y/6+1)*9+x/11+1) >= 0) {
-			        y += 6; 
-			    } else {
-			        y = 1;
-			    } 
+			    if(size-((y/6+1)*9+x/11+1) >= 0)  y += 6; 
+			    else y = 1; 
 			    move_card_up(page,x,y); 
 			    break;
 			}  
 			case 67: { //right              
                 move_card_down(page,x,y);
                 if((size - y/6*9) >= 9) {
-                    if( x == 93) {
-                        x = 5;
-                    } else {
-                        x += 11;
-                    }
-                } else if(x == (((size - y/6*9)*11)-6)) {
-                    x = 5;
-                } else {
-                    x += 11;
-                }
+                    if( x == 93) x = 5;
+                    else x += 11;
+                } else if(x == (((size - y/6*9)*11)-6))  x = 5;
+                       else x += 11;
                 move_card_up(page,x,y);
                 break;
             }                                   
             case 68: { //left  
                 move_card_down(page,x,y); 
                 if((size - y/6*9) >= 9) {
-                    if( x == 5) {
-                        x = 93;
-                    } else {
-                        x -= 11;
-                    }
-                } else if( x == 5 ) {
-                    x = (size - y/6*9)*11-6;
-                } else {
-                    x -= 11;
-                }
+                    if( x == 5) x = 93;
+                    else x -= 11;
+                } else if( x == 5 ) x = (size - y/6*9)*11-6;
+                       else x -= 11;
                 move_card_up(page,x,y);
                 break;
             }          
-			//case 'e':{ return 100;};
             case '\n':  return(y/6*9+x/11);
 		}
 	}
@@ -518,10 +435,7 @@ void game::chooseCard() {
         "==={ ON BOARD }=======================================================================================", 
                                             cardsOnBoard, 
         "==={ MY CARDS }=======================================================================================",  
-                                            myCards);    
-        if(choosenIndex == 100){ //exit
-        	clear();endwin(); start();
-        }   
+                                            myCards);      
         if(!cardsOnBoard.empty() && myCards[choosenIndex]/10 == cardsOnBoard[cardsOnBoard.size()-1]/10){
             for(int i = 0; i<cardsOnBoard.size(); ++i){
                 myCards.push_back(cardsOnBoard[i]);
@@ -540,11 +454,7 @@ void game::chooseCard() {
         "==={ ON BOARD }=======================================================================================", 
                                            cardsOnBoard, 
         "==={ IN DECK  }=======================================================================================", 
-                                           get_hidden_cards(cardsInDeck));                                    
-        
-        if(choosenIndex == 100){ //exit
-        	clear();endwin(); start();
-        }                                                                                  
+                                           get_hidden_cards(cardsInDeck));                                                                                                             
         if(!cardsOnBoard.empty() && (cardsInDeck[choosenIndex]/10 == cardsOnBoard[cardsOnBoard.size()-1]/10)){
             myCards.push_back(cardsInDeck[choosenIndex]);
             cardsInDeck.erase(cardsInDeck.begin()+choosenIndex);
