@@ -1,42 +1,22 @@
 #ifndef Doubly_Linked_List
 #define Doubly_Linked_List
-  
+
+#include "Iterable.h"
+#include "Node.h"
+
 template <typename T>
 class DLList {
 
 private:
-  
-  struct Node {
 
-    T value;
-    Node* prev;
-    Node* next;
-    
-    Node() {
-      prev = next = 0;
-    }
-    
-    Node(const T& v) {
-      value = v;
-      prev = next = 0;
-    }
-
-    Node(const T& v, Node p, Node n) {
-      value = v;
-      prev = p;
-      next = n;    
-    }
-
-  };
-  
-  Node* head;
-  Node* tail;
+  Node<T>* head;
+  Node<T>* tail;
   unsigned int length;
   
 public:
   
   DLList() {
-    head = tail = new Node();
+    head = tail = new Node<T>();
     length = 0;
   }
   
@@ -46,28 +26,36 @@ public:
   }
 
   T& front() {
-    return head->value;
+    if( !isEmpty() )
+      return head->value;
+    throw new EmptyList;
   }
 
   T& back() {
-    return tail->value;
+    if( !isEmpty() )
+      return tail->prev->value;
+    throw new EmptyList;
   }
   
   void pushFront(const T& v) {
-    head->prev = new Node(v, 0, head);
+    head->prev = new Node<T>(v);
+    head->prev->next = head;
+    
     head = head->prev;
-    ++length; 
+    ++length;
   }
 
-  void pusBack(const T& v) {
-    tail->next = tail;
+  void pushBack(const T& v) {
     tail->value = v;
+    tail->next = new Node<T>(v); 
+    tail->next->prev = tail;
+    
     tail = tail->next;
     ++length;
   }
 
   void popFront() {
-    if( head != tail ) {
+    if( !isEmpty() ) {
       head = head->next;
       delete head->prev;
       --length;
@@ -75,7 +63,7 @@ public:
   }
 
   void popBack() {
-    if( head != tail ) {
+    if( !isEmpty() ) {
       tail = tail->prev;
       delete tail->next;
       --length;
@@ -83,10 +71,12 @@ public:
   }
   
   void clear() {
-    while( head != tail ) {
+    while( !isEmpty() ) {
       head = head->next;
       delete head->prev;
     }
+    
+    length = 0;
   }
   
   unsigned int getSize() const {
@@ -96,6 +86,16 @@ public:
   bool isEmpty() {
     return head == tail;
   }
+  
+  Iterable<T> begin() {
+    return *(new Iterable<T>(head));
+  }
+
+  Iterable<T> end() {
+    return *(new Iterable<T>(tail->prev));    
+  }
+
+  struct EmptyList {};
 
 };  
 #endif
