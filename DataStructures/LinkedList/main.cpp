@@ -14,18 +14,17 @@ int main() {
   list->pushFront(70);
   list->pushBack(75);
 
-  Iterable<int> iterator = list->begin();
-  cout << iterator.getCurrent()->value << endl;
-
   cout << "Size: " << list->getSize()  << "\nFirst: " << list->front() << "\nLast: " << list->back() << endl;
-  
-  while( iterator.hasNext() ) {
-    cout << iterator.getCurrent()->value << endl;
-    iterator.next();
+    
+  Iterable<int>* iterator = list->begin();
+  while( iterator->hasNext() ) {
+    cout << iterator->getCurrent()->value << " ";
+    iterator->next();
   }
-
-  //  delete iterator; // how must i delete it ?????
+  cout << endl;
   
+  delete iterator; 
+ 
   return 0;
 
 }

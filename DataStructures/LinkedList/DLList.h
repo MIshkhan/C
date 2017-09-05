@@ -87,12 +87,12 @@ public:
     return head == tail;
   }
   
-  Iterable<T> begin() {
-    return *(new Iterable<T>(head));
+  Iterable<T>* begin() {
+    return new Iterable<T>(head);
   }
 
-  Iterable<T> end() {
-    return *(new Iterable<T>(tail->prev));    
+  Iterable<T>* end() {
+    return new Iterable<T>(tail->prev);    
   }
 
   struct EmptyList {};
