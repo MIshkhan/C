@@ -10,13 +10,8 @@ int main(int argc, char* argv[]) {
    return 1;
   }
   else {
-    fstream f;
-    f.open(argv[1], ios::in);
-
-    Interpreter* interpreter = new Interpreter();
-    // interpreter->start(f);
-
+    Interpreter* interpreter = new Interpreter(argv[1]);
+    interpreter->start();
     delete interpreter;
-    f.close();
   }
 }

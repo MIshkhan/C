@@ -12,5 +12,9 @@ public :
   array<bitset<8>, 1024> R_8;
   
   bitset<64> ZERO;
+
+  Registers() {
+    LineNumber = 0;
+  }
   
 };

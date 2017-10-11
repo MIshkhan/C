@@ -4,39 +4,63 @@
 using namespace std;
 
 class Instructions {
-
 public:
-
-  typedef void(Instructions::*myFunc)(bitset<8>&, bitset<8>);
-
-  myFunc opFunc(string name) {
-    if( opMap.find(name) == opMap.end() )
+  
+  typedef bitset<8> byte;
+  typedef bitset<16> word;
+  typedef bitset<32> dword;
+  typedef bitset<64> qword;
+  typedef void(Instructions::*R)(byte&);
+  typedef void(Instructions::*RR)(byte&, byte&);
+  typedef void(Instructions::*RV)(byte&, uint);
+  
+  R RFunc(string name) {
+    if( ROperations.find(name) == ROperations.end() )
       throw runtime_error("Illegal operation: " + name);
-    return opMap[name];
+    return ROperations[name];
   }
+  
+  RR RRFunc(string name) {
+    if( RROperations.find(name) == RROperations.end() )
+      throw runtime_error("Illegal operation: " + name);
+    return RROperations[name];
+  }  
 
+  RV RVFunc(string name) {
+    if( RVOperations.find(name) == RVOperations.end() )
+      throw runtime_error("Illegal operation: " + name);
+    return RVOperations[name];
+  }
+  
 private:
   
-  map<string, myFunc> opMap = {
-    // {"NOP",    &Instructions::nop},
-    // {"JUMP",   &Instructions::jump},
-    // {"ASSIGN", &Instructions::assign},
-    // {"MOV",    &Instructions::mov},
-    // {"SWAP",   &Instructions::swap},
-    // {"AND",    &Instructions::and},
-    // {"OR",     &Instructions::or},
-    // {"XOR",    &Instructions::xor},
-    // {"NOT",    &Instructions::not},
+  map<string, RR> RROperations = {
     {"NAND",   &Instructions::nand},
-    // {"NOR",    &Instructions::nor},
     {"ADD",    &Instructions::add},
     {"SUB",    &Instructions::sub},
     {"MUL",    &Instructions::mul},
-    {"DIV",    &Instructions::div} 
-    // {"INC",    &Instructions::inc},
-    // {"DEC",    &Instructions::dec}    
-  }; 
+    {"DIV",    &Instructions::div},
+    {"SWAP",   &Instructions::swap},
+    {"AND",    &Instructions::And},
+    {"OR",     &Instructions::Or},
+    {"XOR",    &Instructions::Xor},
+    {"MOV",    &Instructions::mov}
+  };
   
+  map<string, R> ROperations = {
+    {"NOT",    &Instructions::Not},
+    {"NOR",    &Instructions::nor},
+    {"INC",    &Instructions::inc},
+    {"DEC",    &Instructions::dec}    
+  };
+
+  map<string, RV> RVOperations = {
+    {"ASSIGN", &Instructions::assign},
+  };
+
+  // {"NOP",    &Instructions::nop},
+  // {"JUMP",   &Instructions::jump},
+    
   void nop() {
     
   } 
@@ -45,66 +69,72 @@ private:
     
   }
   
-  void assign( bitset<8>& r1, uint value ) {
-    r1 = bitset<8>(r1.to_ulong() + value);
+  void assign( byte& r1, uint value ) {
+    r1 = byte(value);
   }
 
-  void mov( bitset<8>& r1, bitset<8> value ) {
-    r1 = value;
+  void mov( byte& r1, byte& r2 ) {
+    r1 = r2;
   }
-
-  void swap( bitset<8>& r1, bitset<8>& r2 ) {
-    bitset<8> temp = r1;
+  
+  void mov( word& r1, word& r2 ) {
+    r1 = r2;
+  }
+  
+  void swap( byte& r1, byte& r2 ) {
+    byte temp = r1;
     r1 = r2;
     r2 = temp;
   }
 
-  // void and( bitset<8>& r1, bitset<8> r2 ) {
-    
-  // }
-  
-  // void or( bitset<8>& r1, bitset<8> r2 ) {
-    
-  // }
-
-  // void xor( bitset<8>& r1, bitset<8> r2 ) {
-    
-  // }
-  
-  // void not( bitset<8>& r1 ) {
-    
-  // }
-
-  void nand( bitset<8>& r1, bitset<8> r2 ) {
-    
+  void And( byte& r1, byte& r2 ) {
+    r1 = byte(r1.to_ulong() & r2.to_ulong());
   }
   
-  void nor( bitset<8>& r1 ) {
-    
-  }
-  
-  void add( bitset<8>& r1, bitset<8> r2 ) {
-    r1 = bitset<8>(r1.to_ulong());
-  }
-  
-  void sub( bitset<8>& r1, bitset<8> r2 ) {
-    r1 = bitset<8>(r1.to_ulong());
+  void Or( byte& r1, byte& r2 ) {
+    r1 = byte(r1.to_ulong() | r2.to_ulong());
   }
 
-  void mul( bitset<8>& r1, bitset<8> r2 ) {
-    r1 = bitset<8>(r1.to_ulong());
-  }
-
-  void div( bitset<8>& r1, bitset<8> r2 ) {
-    r1 = bitset<8>(r1.to_ulong());
+  void Xor( byte& r1, byte& r2 ) {
+    r1 = byte(r1.to_ulong() ^ r2.to_ulong());
   }
   
-  void inc( bitset<8>& r1 ) {
-    r1 = bitset<8>(r1.to_ulong() + 1);
+  void Not( byte& r1 ) {
+    r1 = byte(!r1.to_ulong());
   }
 
-  void dec( bitset<8>& r1 ) {
-    r1 = bitset<8>(r1.to_ulong() - 1);
+  void nand( byte& r1, byte& r2 ) {
+    And(r1, r2);
+    r1 = !r1;
+  }
+  
+  void nor( byte& r1 ) {
+    Or(r1, r2);
+    r1 = !r1;
+  }
+  
+  void add( byte& r1, byte& r2 ) {
+    r1 = byte(r1.to_ulong() + r2.to_ulong());
+  }
+  
+  void sub( byte& r1, byte& r2 ) {
+    r1 = byte(r1.to_ulong() - r2.to_ulong());
+  }
+  
+  void mul( byte& r1, byte& r2 ) {
+    r1 = byte(r1.to_ulong() * r2.to_ulong());
+  }
+
+  void div( byte& r1, byte& r2 ) {
+    r1 = byte(r1.to_ulong() / r2.to_ulong());
+  }
+  
+  void inc( byte& r1 ) {
+    r1 = byte(r1.to_ulong() + 1);
+  }
+
+  void dec( byte& r1 ) {
+    r1 = byte(r1.to_ulong() - 1);
   }
   
 };
