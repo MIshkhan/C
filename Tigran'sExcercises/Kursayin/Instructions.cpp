@@ -13,23 +13,45 @@ public:
   typedef void(Instructions::*R)(byte&);
   typedef void(Instructions::*RR)(byte&, byte&);
   typedef void(Instructions::*RV)(byte&, uint);
+
+
+  bool isRROperation(string name) {
+    return !(RROperations.find(name) == RROperations.end());
+  }
+  
+  bool isRVOperation(string name) {
+    return !(RVOperations.find(name) == RVOperations.end());
+  }
+
+  bool isROperation(string name) {
+    return !(ROperations.find(name) == ROperations.end());
+  }
   
   R RFunc(string name) {
-    if( ROperations.find(name) == ROperations.end() )
+    if( !isROperation(name) )
       throw runtime_error("Illegal operation: " + name);
     return ROperations[name];
   }
   
   RR RRFunc(string name) {
-    if( RROperations.find(name) == RROperations.end() )
+    if( !isRROperation(name) )
       throw runtime_error("Illegal operation: " + name);
     return RROperations[name];
   }  
 
   RV RVFunc(string name) {
-    if( RVOperations.find(name) == RVOperations.end() )
+    if( !isRVOperation(name) )
       throw runtime_error("Illegal operation: " + name);
     return RVOperations[name];
+  }
+
+  uint getValue(string expression) {
+    uint size = expression.size();
+    
+    for(int i = 0; i < size; ++i) 
+      if( expression[i] < '0' || expression[i] > '9')
+        return -1;
+    return stoi(expression.substr(1, expression.size()));
   }
   
 private:
@@ -43,13 +65,13 @@ private:
     {"SWAP",   &Instructions::swap},
     {"AND",    &Instructions::And},
     {"OR",     &Instructions::Or},
+    {"NOR",    &Instructions::nor},
     {"XOR",    &Instructions::Xor},
     {"MOV",    &Instructions::mov}
   };
   
   map<string, R> ROperations = {
     {"NOT",    &Instructions::Not},
-    {"NOR",    &Instructions::nor},
     {"INC",    &Instructions::inc},
     {"DEC",    &Instructions::dec}    
   };
@@ -60,7 +82,7 @@ private:
 
   // {"NOP",    &Instructions::nop},
   // {"JUMP",   &Instructions::jump},
-    
+  
   void nop() {
     
   } 
@@ -100,17 +122,17 @@ private:
   }
   
   void Not( byte& r1 ) {
-    r1 = byte(!r1.to_ulong());
+    r1 = byte(~r1.to_ulong());
   }
 
   void nand( byte& r1, byte& r2 ) {
     And(r1, r2);
-    r1 = !r1;
+    r1 = byte(~r1.to_ulong());
   }
   
-  void nor( byte& r1 ) {
+  void nor( byte& r1, byte& r2 ) {
     Or(r1, r2);
-    r1 = !r1;
+    r1 = byte(~r1.to_ulong());
   }
   
   void add( byte& r1, byte& r2 ) {

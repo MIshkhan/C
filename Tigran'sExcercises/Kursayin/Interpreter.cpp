@@ -3,6 +3,7 @@
 #include <vector>
 #include <string> 
 #include "Registers.cpp"
+#include "Instructions.cpp"
 
 using namespace std;
 
@@ -36,32 +37,53 @@ private :
   Registers* registers;
 
   string fetch() {
-    return content[3];//registers->LineNumber];
+    return content[0];//registers->LineNumber];
   }
  
   void decodeAndExecute(string command) {
-    string RRCommands = "(NAND|ADD|SUB|MUL|DIV|SWAP|AND|OR|XOR|MOV)";
-    string RCommands  = "(NOT|NOR|INC|DEC)";
-    string RVCommands = "(ASSIGN)"; 
-    string VCommands  = "(JUMP)";
-    string types      = "(B|QW|W|DW)";
-    string reg        = "R\\[[0-1023]]";
-
-    string value, operation, type = "DW";
-    string regIndex1, regIndex2;
-
-    if ( regex_match(command, regex( RRCommands + " (" + types + " )." + reg + " " + reg)) ) {
-      vector<string> tokens = split(command);
-      uint size = tokens.size();
-      
-      operation = tokens[0];
-      if( size == 4 ) type = tokens[1];  
-      regIndex1 = tokens[size-2];
-      regIndex2 = tokens[size-1];
-      
-      // cout << operation << "  " << type << "  " << regIndex1 << "  " << regIndex2 << endl; 
-    } 
+    string operation, type = "DW";
+    int regIndex1, regIndex2;
+    uint value;
     
+    vector<string> tokens = split(command);
+    uint size = tokens.size();
+    Instructions* inst = new Instructions();
+    
+    
+    if( size == 0 || size > 4) 
+      return;
+    
+    operation = tokens[0];
+
+    if( inst->isROperation(operation) ) {
+      regIndex1 = registers->getRegister(tokens[2]);
+
+      if( regIndex1 == -1 )
+        throw runtime_error("Illegal command: " + command);
+
+      (inst->*( inst->RFunc(operation)))(registers->R_8[regIndex1]);
+    }
+    
+    // if( inst->isRVOperation(operation) ) {
+    //   regIndex1 = registers->getRegister(tokens[1]);
+    //   value = inst->getValue(tokens[2]);
+
+    //   if( regIndex1 == -1 || value == -1 )
+    //     throw runtime_error("Illegal command: " + command);
+
+    //   (inst->*( inst->RVFunc(operation)))(registers->R_8[regIndex1], value);
+    // }
+
+    // if( inst->isRROperation(operation) ) {
+    //   regIndex1 = registers->getRegister(tokens[1]);
+    //   regIndex2 = registers->getRegister(tokens[2]);
+      
+    //   if( regIndex1 == -1 || regIndex2 == -1 )
+    //     throw runtime_error("Illegal command: " + command);
+
+    //   (inst->*( inst->RRFunc(operation)))(registers->R_8[regIndex1], registers->R_8[regIndex2]);
+    // }
+
   }
 
   vector<string> split(string data) {
