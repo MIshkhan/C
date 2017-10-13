@@ -1,4 +1,4 @@
-#include <array>
+#include <vector>
 #include <bits/stdc++.h>
 
 using namespace std;
@@ -18,20 +18,21 @@ public :
   }
 
   int getRegister(string reg) {
-    uint size = reg.size();
+    uint index, size = reg.size();
     
     if( size < 2 || reg[0] != 'R')
-      return -1;
+      throw "No such register: R" + reg + "\n";
     
     for(int i = 1; i < size; ++i) {
       if( reg[i] < '0' || reg[i] > '9')
-        return -1;
+        throw "No such register: R" + reg + "\n";
     }
 
-    int index = stoi(reg.substr(1, reg.size()));
+    index = stoi(reg.substr(1, reg.size()));
     if(index >= 0 || index <= 1023)
       return index;
-    return -1;
+    else
+      throw "No such register: R" + reg + "\n";
   }
   
 };

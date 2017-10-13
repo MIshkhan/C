@@ -12,7 +12,7 @@ public:
   
   Interpreter(string fileName) {
     string data;
-    Registers* registers = new Registers();
+    registers = new Registers();
 
     file.open(fileName, ios::in);
 
@@ -37,53 +37,63 @@ private :
   Registers* registers;
 
   string fetch() {
-    return content[0];//registers->LineNumber];
+    return content[registers->LineNumber];
   }
  
   void decodeAndExecute(string command) {
     string operation, type = "DW";
-    int regIndex1, regIndex2;
-    uint value;
+    uint regOne, regTwo, value;
     
     vector<string> tokens = split(command);
     uint size = tokens.size();
     Instructions* inst = new Instructions();
     
     
-    if( size == 0 || size > 4) 
+    if( size < 2 || size > 4) 
       return;
     
     operation = tokens[0];
 
+    // INC, DEC 
     if( inst->isROperation(operation) ) {
-      regIndex1 = registers->getRegister(tokens[2]);
 
-      if( regIndex1 == -1 )
-        throw runtime_error("Illegal command: " + command);
+      if( size != 2 )
+        throwWrongNumOfArguments(2);
+      
+      regOne = registers->getRegister(tokens[2]);
+      (inst->*( inst->RFunc(operation)))(registers->R_8[regOne]);
+    }
 
-      (inst->*( inst->RFunc(operation)))(registers->R_8[regIndex1]);
+    // ASSIGN
+    if( inst->isRVOperation(operation) ) {
+
+      if( size != 4 )
+        throwWrongNumOfArguments(4);
+
+      type   = inst->getType(tokens[1]);
+      regOne = registers->getRegister(tokens[2]);
+      value  = inst->getValue(tokens[3], type);
+      
+      (inst->*( inst->RVFunc(operation)))(registers->R_8[regOne], value);
     }
     
-    // if( inst->isRVOperation(operation) ) {
-    //   regIndex1 = registers->getRegister(tokens[1]);
-    //   value = inst->getValue(tokens[2]);
+    if( inst->isRROperation(operation) ) {
 
-    //   if( regIndex1 == -1 || value == -1 )
-    //     throw runtime_error("Illegal command: " + command);
-
-    //   (inst->*( inst->RVFunc(operation)))(registers->R_8[regIndex1], value);
-    // }
-
-    // if( inst->isRROperation(operation) ) {
-    //   regIndex1 = registers->getRegister(tokens[1]);
-    //   regIndex2 = registers->getRegister(tokens[2]);
+      if( size != 4 )
+        throwWrongNumOfArguments(4);
       
-    //   if( regIndex1 == -1 || regIndex2 == -1 )
-    //     throw runtime_error("Illegal command: " + command);
+      type   = inst->getType(tokens[1]);
+      regOne = registers->getRegister(tokens[2]);
+      regTwo = registers->getRegister(tokens[3]);
+      
+      (inst->*( inst->RRFunc(operation)))(registers->R_8[regOne], registers->R_8[regTwo]);
+    }
 
-    //   (inst->*( inst->RRFunc(operation)))(registers->R_8[regIndex1], registers->R_8[regIndex2]);
-    // }
+  }
 
+  void throwWrongNumOfArguments(char num) {
+    throw runtime_error("Wrong number of arguments required :" + to_string(num) + "\n" +
+                        fetch() + " (line: " + to_string(registers->LineNumber) + ")\n");
   }
 
   vector<string> split(string data) {

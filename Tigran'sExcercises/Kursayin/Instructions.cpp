@@ -45,13 +45,36 @@ public:
     return RVOperations[name];
   }
 
-  uint getValue(string expression) {
-    uint size = expression.size();
+  ulong getValue(string expression, string type) {
     
-    for(int i = 0; i < size; ++i) 
+    for(int i = 0; i < expression.size(); ++i) 
       if( expression[i] < '0' || expression[i] > '9')
-        return -1;
-    return stoi(expression.substr(1, expression.size()));
+        throw runtime_error("Value " + expression + " isn't number\n");
+
+    ulong result = stol(expression);
+    
+    if ( !isNumOfType(result, type) )
+      throw runtime_error("Value " + expression + " isn't not of type " + type + "\n");
+    
+    return result; 
+  }
+
+  bool isNumOfType(ulong num, string type) {
+    if (type.compare("B") == 0)
+      return num >= 0 && num <= 255;
+    if (type.compare("W") == 0)
+      return num >= 0 && num <= 65535;
+    if (type.compare("DW") == 0)
+      return num >= 0 && num <= 4294967296;
+    if (type.compare("QW") == 0)
+      return true;
+  }
+
+  string getType(string type) {
+    if ( type.compare("B") == 0 || type.compare("W") == 0 || 
+         type.compare("DW") == 0 || type.compare("QW") == 0 )
+      return type;
+    throw runtime_error("Unknown type: " + type + "\n");
   }
   
 private:
@@ -92,7 +115,7 @@ private:
   }
   
   void assign( byte& r1, uint value ) {
-    r1 = byte(value);
+    r1 = byte (value);
   }
 
   void mov( byte& r1, byte& r2 ) {
