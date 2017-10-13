@@ -21,18 +21,18 @@ public :
     uint index, size = reg.size();
     
     if( size < 2 || reg[0] != 'R')
-      throw "No such register: R" + reg + "\n";
+      throw runtime_error("No such register: R" + reg + "\n");
     
     for(int i = 1; i < size; ++i) {
       if( reg[i] < '0' || reg[i] > '9')
-        throw "No such register: R" + reg + "\n";
+        throw runtime_error("No such register: R" + reg + "\n");
     }
 
     index = stoi(reg.substr(1, reg.size()));
     if(index >= 0 || index <= 1023)
       return index;
     else
-      throw "No such register: R" + reg + "\n";
+      throw runtime_error("No such register: R" + reg + "\n");
   }
   
 };
