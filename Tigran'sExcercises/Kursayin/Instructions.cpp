@@ -14,7 +14,6 @@ public:
   typedef void(Instructions::*RR)(byte&, byte&);
   typedef void(Instructions::*RV)(byte&, uint);
 
-
   bool isRROperation(string name) {
     return !(RROperations.find(name) == RROperations.end());
   }

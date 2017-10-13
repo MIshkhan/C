@@ -27,8 +27,11 @@ public:
   }
 
   void start() {
-    string command = fetch();
-    decodeAndExecute(command);
+    while( content.size() != registers->LineNumber ) {
+      string command = fetch();
+      decodeAndExecute(command);
+      registers->LineNumber += 1;
+    }
   }
   
 private :
@@ -61,7 +64,11 @@ private :
         throwWrongNumOfArguments(2);
       
       regOne = registers->getRegister(tokens[2]);
+
+      printCurrCommand();
+      detectKey();
       (inst->*( inst->RFunc(operation)))(registers->R_8[regOne]);
+      return;
     }
 
     // ASSIGN
@@ -74,7 +81,10 @@ private :
       regOne = registers->getRegister(tokens[2]);
       value  = inst->getValue(tokens[3], type);
       
+      printCurrCommand();
+      detectKey();
       (inst->*( inst->RVFunc(operation)))(registers->R_8[regOne], value);
+      return;
     }
     
     if( inst->isRROperation(operation) ) {
@@ -85,12 +95,24 @@ private :
       type   = inst->getType(tokens[1]);
       regOne = registers->getRegister(tokens[2]);
       regTwo = registers->getRegister(tokens[3]);
-      
+
+      printCurrCommand();
+      detectKey();
       (inst->*( inst->RRFunc(operation)))(registers->R_8[regOne], registers->R_8[regTwo]);
+      return;
     }
 
+    throw runtime_error("Unknown command: " + command);
   }
 
+  void detectKey() {
+    // TODO
+  }
+  
+  void printCurrCommand() {
+    cout << "Line: " + to_string(registers->LineNumber) + " " + fetch() + "\n";
+  }
+  
   void throwWrongNumOfArguments(char num) {
     throw runtime_error("Wrong number of arguments required :" + to_string(num) + "\n" +
                         fetch() + " (line: " + to_string(registers->LineNumber) + ")\n");
