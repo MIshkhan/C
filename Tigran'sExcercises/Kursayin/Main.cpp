@@ -1,6 +1,5 @@
 #include<iostream>
-#include <fstream>
-#include "Interpreter.cpp"
+#include "interpreter.h"
 
 using namespace std;
 
