@@ -11,36 +11,42 @@ class Interpreter {
 public:
   
   Interpreter(string fileName) {
-    string data;
-    registers = new Registers();
+    regs = new Registers();
+    inst = new Instructions(regs);
 
     file.open(fileName, ios::in);
 
+    string data;
     while(getline(file, data)) 
-      content.push_back(data);
+      inst->content.push_back(data);
     
     file.close();
   }
 
   ~Interpreter() {
-    delete registers;
+    delete regs;
+    delete inst;
   }
 
   void start() {
-    while( content.size() != registers->LineNumber ) {
-      string command = fetch();
-      decodeAndExecute(command);
-      registers->LineNumber += 1;
+    try {
+      while( inst->content.size() != regs->LineNumber ) {
+	string command = fetch();
+	decodeAndExecute(command);
+	regs->LineNumber += 1;
+      }
+    } catch (const runtime_error& e) {
+      cout << "[ERROR] - " << e.what() << endl;
     }
   }
   
 private :
   fstream file;
-  vector<string> content;
-  Registers* registers;
-
+  Registers* regs;
+  Instructions* inst;
+  
   string fetch() {
-    return content[registers->LineNumber];
+    return inst->content[regs->LineNumber];
   }
  
   void decodeAndExecute(string command) {
@@ -49,8 +55,9 @@ private :
     
     vector<string> tokens = split(command);
     uint size = tokens.size();
-    Instructions* inst = new Instructions();
-    
+   
+    printCurrCommand();
+    detectKey();
     
     if( size < 2 || size > 4) 
       return;
@@ -63,11 +70,10 @@ private :
       if( size != 2 )
         throwWrongNumOfArguments(2);
       
-      regOne = registers->getRegister(tokens[2]);
+      regOne = regs->getRegister(tokens[2]);
 
-      printCurrCommand();
-      detectKey();
-      (inst->*( inst->RFunc(operation)))(registers->R_8[regOne]);
+      cout << "(" << tokens[2] << " = " << regs->R_8[regOne].to_ulong() << ")" << endl;
+      (inst->*( inst->RFunc(operation)))(regs->R_8[regOne]);
       return;
     }
 
@@ -78,12 +84,11 @@ private :
         throwWrongNumOfArguments(4);
 
       type   = inst->getType(tokens[1]);
-      regOne = registers->getRegister(tokens[2]);
+      regOne = regs->getRegister(tokens[2]);
       value  = inst->getValue(tokens[3], type);
-      
-      printCurrCommand();
-      detectKey();
-      (inst->*( inst->RVFunc(operation)))(registers->R_8[regOne], value);
+
+      cout << "(" << tokens[2] << " = " << regs->R_8[regOne].to_ulong() << ")" << endl;
+      (inst->*( inst->RVFunc(operation)))(regs->R_8[regOne], value);
       return;
     }
     
@@ -93,12 +98,12 @@ private :
         throwWrongNumOfArguments(4);
       
       type   = inst->getType(tokens[1]);
-      regOne = registers->getRegister(tokens[2]);
-      regTwo = registers->getRegister(tokens[3]);
-
-      printCurrCommand();
-      detectKey();
-      (inst->*( inst->RRFunc(operation)))(registers->R_8[regOne], registers->R_8[regTwo]);
+      regOne = regs->getRegister(tokens[2]);
+      regTwo = regs->getRegister(tokens[3]);
+      
+      cout << "(" << tokens[2] << " = " << regs->R_8[regOne].to_ulong() << ", ";
+      cout << tokens[3] << " = " << regs->R_8[regTwo].to_ulong() << ")" << endl;
+      (inst->*( inst->RRFunc(operation)))(regs->R_8[regOne], regs->R_8[regTwo]);
       return;
     }
 
@@ -110,12 +115,11 @@ private :
   }
   
   void printCurrCommand() {
-    cout << "Line: " + to_string(registers->LineNumber) + " " + fetch() + "\n";
+    cout << "Line: " << regs->LineNumber << " " << fetch() << " ";
   }
   
   void throwWrongNumOfArguments(char num) {
-    throw runtime_error("Wrong number of arguments required :" + to_string(num) + "\n" +
-                        fetch() + " (line: " + to_string(registers->LineNumber) + ")\n");
+    throw runtime_error("Wrong number of arguments required : " + to_string(num));
   }
 
   vector<string> split(string data) {

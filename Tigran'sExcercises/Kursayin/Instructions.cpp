@@ -5,6 +5,7 @@ using namespace std;
 
 class Instructions {
 public:
+  vector<string> content;
   
   typedef bitset<8> byte;
   typedef bitset<16> word;
@@ -14,6 +15,8 @@ public:
   typedef void(Instructions::*RR)(byte&, byte&);
   typedef void(Instructions::*RV)(byte&, uint);
 
+  Instructions(Registers* r): regs(r) {}
+  
   bool isRROperation(string name) {
     return !(RROperations.find(name) == RROperations.end());
   }
@@ -48,35 +51,25 @@ public:
     
     for(int i = 0; i < expression.size(); ++i) 
       if( expression[i] < '0' || expression[i] > '9')
-        throw runtime_error("Value " + expression + " isn't number\n");
+        throw runtime_error("Value " + expression + " isn't number");
 
     ulong result = stol(expression);
     
     if ( !isNumOfType(result, type) )
-      throw runtime_error("Value " + expression + " isn't not of type " + type + "\n");
+      throw runtime_error("Value " + expression + " isn't not of type " + type);
     
     return result; 
-  }
-
-  bool isNumOfType(ulong num, string type) {
-    if (type.compare("B") == 0)
-      return num >= 0 && num <= 255;
-    if (type.compare("W") == 0)
-      return num >= 0 && num <= 65535;
-    if (type.compare("DW") == 0)
-      return num >= 0 && num <= 4294967296;
-    if (type.compare("QW") == 0)
-      return true;
   }
 
   string getType(string type) {
     if ( type.compare("B") == 0 || type.compare("W") == 0 || 
          type.compare("DW") == 0 || type.compare("QW") == 0 )
       return type;
-    throw runtime_error("Unknown type: " + type + "\n");
+    throw runtime_error("Unknown type: " + type);
   }
   
 private:
+  Registers* regs;
   
   map<string, RR> RROperations = {
     {"NAND",   &Instructions::nand},
@@ -170,6 +163,8 @@ private:
   }
 
   void div( byte& r1, byte& r2 ) {
+    if(r2.to_ulong() == 0)
+      throw runtime_error("Division by zero");
     r1 = byte(r1.to_ulong() / r2.to_ulong());
   }
   
@@ -180,5 +175,19 @@ private:
   void dec( byte& r1 ) {
     r1 = byte(r1.to_ulong() - 1);
   }
-  
+
+  bool isNumOfType(ulong num, string type) {
+    if (type.compare("B") == 0)
+      return num >= 0 && num <= 255;
+    if (type.compare("W") == 0)
+      return num >= 0 && num <= 65535;
+    if (type.compare("DW") == 0)
+      return num >= 0 && num <= 4294967296;
+    if (type.compare("QW") == 0)
+      return true;
+  }
+
+  void setFlags(char OF, char SF, char ZF, char PF, char CF) {
+    
+  }
 };
